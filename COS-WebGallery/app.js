@@ -1,6 +1,7 @@
 var express = require('express');
 var cfenv = require('cfenv');
 var bodyParser = require('body-parser');
+
 var app = express();
 var path = require('path');
 var aws = require('aws-sdk');
@@ -23,12 +24,15 @@ var vcap_services = JSON.parse(process.env.VCAP_SERVICES);
 var credentailsJson = vcap_services['Object Storage Dedicated'][0]['credentials'];
 var s3 = new aws.S3(awsConfig({endpoint: credentailsJson['endpoint-url'],region: credentailsJson['region'], 
                        accessKeyId: credentailsJson['accessKeyID'], secretAccessKey: credentailsJson['secretAccessKey']}));
+
+// If Directly reading from application code 
+// s3 = new aws.S3(awsConfig({endpoint: '<ENDPOINT-URL>',region: '<REGION>', 
+//        accessKeyId: '<AWS_ACCESS_KEY>', secretAccessKey: 'AWS_SECRET_KEY'}));    
+
 var myBucket = 'web-images';
 
 module.exports = {s3 : s3, 
 				  myBucket: myBucket}
-// If Directly reading from application code 
-// s3 = new aws.S3(awsConfig({endpoint: 'https://eu-geo.dys1.ibm.objstor.com',region: 'container_dsnet_config_vault', accessKeyId: 'A6RfdinfRc474yLAAoVi', secretAccessKey: 'ePIQWSaEWtpI1qBxZb8MF3BMeHNKbSLxCFo0pL3v'}));    
 
 app.get('/imgs/:myimage',function(req,res){
   var
@@ -43,7 +47,6 @@ app.get('/imgs/:myimage',function(req,res){
 
 var imageUploadRouter = require('./src/routes/imageUploadRoutes')(title);
 var galleryRouter = require('./src/routes/galleryRoutes')(title);
-
 
 app.use('/gallery', galleryRouter);
 app.use('/', imageUploadRouter);
