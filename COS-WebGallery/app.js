@@ -1,11 +1,7 @@
 var express = require('express');
 var cfenv = require('cfenv');
 var bodyParser = require('body-parser');
-
 var app = express();
-var path = require('path');
-var aws = require('aws-sdk');
-var awsConfig = require('aws-config');
 
 // serve the files out of ./public as our main files
 app.use(express.static('public'));
@@ -18,6 +14,9 @@ var title = 'Simple COS Web Gallery';
 app.get('/', function (req, res) {
   res.render('index', {status: '', title: title});
 });
+
+var aws = require('aws-sdk');
+var awsConfig = require('aws-config');
 
 // IF Reading from VCAP_SERVICES as after binding credentials
 var vcap_services = JSON.parse(process.env.VCAP_SERVICES);
