@@ -20,8 +20,6 @@ var router = function(title) {
                 }
                 res.render('index', {status: status, title: title});
             });
-
-
     return imageUploadRouter;
 };
 

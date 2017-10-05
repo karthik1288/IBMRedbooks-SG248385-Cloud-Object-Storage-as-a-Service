@@ -1,20 +1,12 @@
 var galleryController = function(title) {
 
-    var aws = require('aws-sdk');
-    var awsConfig = require('aws-config');
+    var s3 = require('../../app.js').s3;
+    var myBucket = require('../../app.js').myBucket;
     var multer = require('multer');
     var multerS3 = require('multer-s3');
-    
-    // IF Reading from VCAP_SERVICES as after binding credentials
-    var vcap_services = JSON.parse(process.env.VCAP_SERVICES);
-    var credentailsJson = vcap_services['Object Storage Dedicated'][0]['credentials'];
-
-    var s3 = new aws.S3(awsConfig({endpoint: credentailsJson['endpoint-url'],region: credentailsJson['region'], accessKeyId: credentailsJson['accessKeyID'], secretAccessKey: credentailsJson['secretAccessKey']}));
-    
-    // If Directly reading from application code 
-    //var s3 = new aws.S3(awsConfig({endpoint: 'https://eu-geo.dys1.ibm.objstor.com',region: 'container_dsnet_config_vault', accessKeyId: 'A6RfdinfRc474yLAAoVi', secretAccessKey: 'ePIQWSaEWtpI1qBxZb8MF3BMeHNKbSLxCFo0pL3v'}));
-    
-    var myBucket = 'web-images';
+    var fs = require('fs');
+    var https = require('https');
+    var path = require('path');
 
     var upload = multer({
         storage: multerS3({
@@ -28,25 +20,21 @@ var galleryController = function(title) {
     });
 
     var getGalleryImages = function (req, res) {
-
-        var imageUrlList = [];
+        var imgList = [];
         var params = {Bucket: myBucket};
         s3.listObjects(params, function (err, data) {
             if(data) {
                 var bucketContents = data.Contents;
-
                 for (var i = 0; i < bucketContents.length; i++) {
                     if(bucketContents[i].Key.search(/.jpg/i) > -1) {
-                        var urlParams = {Bucket: myBucket, Key: bucketContents[i].Key};
-                        s3.getSignedUrl('getObject', urlParams, function (err, url) {
-                            imageUrlList[i] = url;
-                        });
+                        console.log("image name is : "+bucketContents[i].Key);
+                        imgList[i] = "imgs/"+bucketContents[i].Key;
                     }
                 }
             }
             res.render('galleryView', {
                 title: title,
-                imageUrls: imageUrlList
+                imageUrls: imgList
             });
         });
     };

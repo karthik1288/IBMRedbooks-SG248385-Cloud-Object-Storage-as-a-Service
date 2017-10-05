@@ -8,7 +8,7 @@ var router = function(title) {
 
     galleryRouter.route('/')
         .get(galleryController.getGalleryImages);
-
+        
     return galleryRouter;
 };
 module.exports = router;

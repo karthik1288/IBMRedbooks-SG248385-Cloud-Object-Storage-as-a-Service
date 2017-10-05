@@ -2,5 +2,7 @@ applications:
 - path: .
   memory: 256M
   instances: 1
-  name: COS-WebGallery
+  name: COS-WebGallery-tutorial
+  routes:
+  - route: cos-webgallery-rfrance.dys1.eu-gb.bluemix.net 
   disk_quota: 1024M
