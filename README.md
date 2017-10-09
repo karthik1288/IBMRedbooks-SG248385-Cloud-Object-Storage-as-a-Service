@@ -136,31 +136,7 @@ Follow these steps:
     git clone https://github.com/karthik1288/ICOS-Dedicated-Demo-NodeJS
     ```
 
-2.  Run the app locally. Open a CLI and change your working directory to
-    the COS-WebGallery directory. Notice the Node.js dependencies
-    listed in the package.json file. Download them using the command
-    shown in the following example.
-
-    ```
-    npm install
-    ```
-
-     Run the app using the command shown in the following example.
-
-    ```
-    npm start
-    ```
-
-     Open a browser and view your app on the address and port that is output
-to the console, <http://localhost:3000>.
-
-     **Tip**: To restart the app locally, kill the node process (Ctrl+C) to
-stop it, and use `npm start` again. Using nodemon to restart your app when
-it detects a change saves you time. Install nodemon globally like this:
-`npm install -g nodemon`. To have nodemon start you app, run it from the command line in your app
-directory using: `nodemon`.
-
-3.  Prepare the app for deployment. Update the application name property
+2.  Prepare the app for deployment. Update the application name property
     value in the manifest.yml file from COS-WebGallery, to the name you
     entered for your app on Bluemix. The COS-WebGallery manifest.yml
     looks like the following example. Also update the package.json file
@@ -178,7 +154,7 @@ directory using: `nodemon`.
     ```
 
 
-4.  Deploy the app to Bluemix. To get the starter app with your changes
+3.  Deploy the app to Bluemix. To get the starter app with your changes
     to Bluemix, deploy it using the Cloud Foundry CLI:
  
 	a.  Set the API Endpoint for your region by using the api command (as
@@ -197,14 +173,13 @@ directory using: `nodemon`.
     cf login -u <my@account.com> -o <organization-name> -s <space-name>
     ```
     
-    c.  Deploy the app to Bluemix with the push command (as shown in the
-    following example).
+    c.  Deploy the app to Bluemix with the push command, but don't start the app yet. We'll start it after we bind a Cloud Object Storage Dedicated service instance to the app.
 
     ```
-    cf push
+    cf push --no-start
     ```
    	
-Next, create an instance of the Cloud Object service and connect it to your app.
+Next, create an instance of the Cloud Object Storage Dedicated service and connect it to your app.
 
 ### Creating and connecting the service instance
 
@@ -212,7 +187,7 @@ Navigate to the **Catalog** to provision an instance of the service.
 
 1.  Search for **Cloud Object Storage**.
 
-2.  Under Application Services, click **Cloud Object Storag Dedicated**.
+2.  Under Application Services, click **Cloud Object Storage Dedicated**.
 
     ![searchCOS](images/searchcos.png)
 
@@ -225,7 +200,10 @@ Navigate to the **Catalog** to provision an instance of the service.
     The service is created and bound to your app. The `VCAP_SERVICES` variable coded
     in the app pulls in the credentials from your instance and authenticates the service.
 
-4. The app re-stages with the service instance bound to it, and the app should be healthy.
+4.  Start the app with the service instance bound to it. Click the 
+    **Start** button on the App overview page.
+
+    ![createserviceinstance](images/startAppAfterBind.png)
 
     Cloud Foundry reports that the app was successfully 
     deployed and started. If you are logged in to the Bluemix web console, 
@@ -245,7 +223,7 @@ directory to contain the express routes, and a `controllers` directory as
 the place to put the controller logic. Place these items under a source
 directory that is named `src` (see figure below).
 
-![directorystructure](https://cloud.githubusercontent.com/assets/19173079/24822675/86a7084a-1bbc-11e7-9567-4fc6cea7a939.jpg)
+![directorystructure](images/dir_structure.png)
 
 
 **Tip**: The repo you cloned earlier contains a directory named
@@ -287,12 +265,15 @@ starts. Also use it when testing the app locally.
 
 The following figure shows the beginnings for the application in `app.js`.
 Lines 1 - 3 tell the node to load modules that are needed to get started.
-Line 4 creates the express app by using the express module. Line 25 gets
-the Cloud Foundry environment object. Lines 28 - 32 tell the express app
+Line 4 creates the express app by using the express module. 
+
+![app_1](images/express_creation.png)
+
+Line 55 gets the Cloud Foundry environment object. Lines 58 - 60 tell the express app
 to listen on the port that is assigned to the port property. We print a
 message with the server URL to the console.
 
-![app_1](https://cloud.githubusercontent.com/assets/19173079/24822730/1bb0fc0c-1bbd-11e7-9d61-95478757dcb8.jpg)
+![app_1](images/server_creation.png)
 
 The next figure shows how to define a path and views. Line 7 tells the
 express app to use the public directory to serve our static files, which
@@ -304,10 +285,13 @@ data to the app as JSON. In lines 12 - 16, the express app responds to
 all incoming GET requests to our app URL by rendering the `index.ejs` view
 template.
 
-![app_2](https://cloud.githubusercontent.com/assets/19173079/24822753/488a863a-1bbd-11e7-9fe9-ee376e8fe2e4.jpg)
+![app_2](images/app_set.png)
 
+The following figure shows how to create an S3 client. We require modules `aws-sdk` and `aws-config` to create the S3 client. Lines 18-29 show how to read the required variables to create the S3 client from the `VCAP_SERVICES` JSON configuration file. We read the endpoint address, region, and AWS credentials from `VCAP_SERVICES` and set the bucket name statically later. You can change the bucket name from `web-images` in line 31. S3 parameters can statically set up once the service instance is created, as shown in the comments for lines 27-29.
 
-The following figure shows what the index view template when rendered
+![app_2](images/s3_client_creation.png)
+
+The following figure shows the index view template when rendered
 and sent to the browser.
 
 ![uploadimageview](https://cloud.githubusercontent.com/assets/19173079/24822932/f087e44e-1bbe-11e7-9349-93ff489eeb36.jpg)
@@ -322,7 +306,7 @@ template on line 15. Otherwise, we are simply using some CDN addresses
 to pull in Bootstrap CSS, Bootstrap JavaScript, and JQuery. We use a
 static `styles.css` file from our `public/style` sheets directory.
 
-![view_head-inc](https://cloud.githubusercontent.com/assets/19173079/24822956/18ec3ec6-1bbf-11e7-9240-3f5a913c1320.jpg)
+![view_head-inc](images/headejs.png)
 
 
 The body of the index view (see figure below), contains our bootstrap-styled 
@@ -340,9 +324,9 @@ Consider these two notes:
     variable named "status", and is displayed below the upload form on
     line 31.
 
-![view_index-body](https://cloud.githubusercontent.com/assets/19173079/24822803/ae19fbd4-1bbd-11e7-8712-a720050cc3a6.jpg)
+![view_index-body](images/indexejs.png)
 
-The following figure returns to `app.js`. Lines 18 - 19 set up express
+The following figure returns to `app.js`. Lines 47 - 48 set up express
 routes to handle additional requests that will be made to our app. The
 code for these routers will be in two files under the `./src/routes`
 directory:
@@ -353,7 +337,7 @@ directory:
 -   `galleryRoutes.js`: This file handles requests when the user clicks
     the Gallery tab to request the `imageGallery` view.
 
-![app_3](https://cloud.githubusercontent.com/assets/19173079/24822769/5ed0c49a-1bbd-11e7-9d48-39c68428314d.jpg)
+![app_3](images/routes_app.png)
 
 
 #### Image upload
@@ -362,12 +346,12 @@ See `imageUploadRoutes.js` in the figure below. We must create an instance
 of a new express router and name it `imageUploadRouter` in lines 1 - 2.
 Then, on line 5, we create a function that returns `imageUploadRouter`,
 and assign it to a variable called "router". We export the function in
-"router" on line 28 to make it accessible to `app.js`. On line 7, we
+"router" on line 26 to make it accessible to `app.js`. On line 7, we
 require a file named `galleryController.js`. Because some logic is
 dedicated to controlling how we upload our images, we put that logic in
 this function and save it in our `./src/controllers` directory.
 
-Line 12 is where our `imageUploadRouter` is told to route requests for the
+Line 10 is where our `imageUploadRouter` is told to route requests for the
 root app route ("/") when the HTTP POST method is used. Inside the post
 function of our `imageUploadRouter`, we use middleware from the `multer` and
 `multer-s3` modules which is exposed by the `galleryController` as upload.
@@ -378,31 +362,28 @@ we had at least one file in our request object to upload. Based on those
 conditions, we set the feedback in our status variable and render the
 `index` view template with the new status.
 
-![imguploadrouter](https://cloud.githubusercontent.com/assets/19173079/24822982/6d0aac40-1bbf-11e7-9bb5-7dd0a4fb52bc.jpg)
+![imguploadrouter](images/img_upload_route.png)
 
-Look at how we set up the `multer` upload in the following figure. We
-require modules `aws-sdk`, `aws-config`, `multer`, and `multer-s3`. Lines 9 - 11 show how to
-read the required variables to create the S3 client from the `VCAP_SERVICES` JSON configuration file. We 
-read the endpoint address, region, and AWS credentials from `VCAP_SERVICES` and set the bucket name statically.
+Look at how we set up the `multer` upload in the following figure. We require modules `multer` and `multer-s3`.
 
-![gallerycontroller](images/readvcapservices.png)
+![gallerycontroller](images/imageuploadController.png)
 
 
 We define upload used by `imageUploadRouter` on line 11 by creating a new
 `multer` instance with a storage property on line 12. This property tells
 `multer` where to send the file from our multipart/form-data. Since IBM
 COS uses an implementation of the S3 API, we set storage to be an
-`s3-multer` object. This `s3-multer` object contains an s3 property that we
-have assigned to our s3 object from line 7, and a bucket property that
-we have assigned the `myBucket` variable from line 8, which is assigned a
-value of “web-images”. The `s3-multer` object now has all the data
+`multer-s3` object. This `multer-s3` object contains an s3 property that we
+have assigned to our s3 object from line 13, and a bucket property that
+we have assigned the `myBucket` variable from line 14, which is assigned a
+value of `web-images`. The `multer-s3` object now has all the data
 necessary to connect and upload files to our IBM COS bucket when it
 receives data from the upload form. The name or key of the uploaded
 object will be the original file name taken from the file object when it
-is stored in our IBM COS “web-images” bucket. For local testing, a
+is stored in our IBM COS `web-images` bucket. For local testing, a
 helpful task is to print the file object to the console, on line 17.
 
-We perform a local test of the Upload form and the output from the
+We perform a test of the Upload form and the output from the
 console log of the file in the following example.
 
 ```
@@ -419,11 +400,11 @@ a successful upload.
 
 #### Image retrieval and display
 
-The following figure refers to `app.js`. Line 19 creates `galleryRouter`,
-and tells express to use it when the “/gallery” route is requested. Look
+The following figure refers to `app.js`. Line 48 creates `galleryRouter`,
+and tells express to use it when the `/gallery` route is requested. Look
 at the `galleryRoutes.js` file that is used to define `galleryRouter`.
 
-![app_3](https://cloud.githubusercontent.com/assets/19173079/24822769/5ed0c49a-1bbd-11e7-9d48-39c68428314d.jpg)
+![app_3](images/routes_app.png)
 
 1.  Define which router to use for each path
 
@@ -435,35 +416,39 @@ at the `galleryRoutes.js` file that is used to define `galleryRouter`.
     output in the response from `getGalleryImages`, which is exposed by the
     `galleryController` on line 10.
     
-    ![galleryroutes](https://cloud.githubusercontent.com/assets/19173079/24823054/08cceb0c-1bc0-11e7-9853-ece1cfd12bee.jpg)
+    ![galleryroutes](images/galleryRoutes.png)
 
     Referring to `galleryController.js` (see figure below), we define the
     `getGalleryImages` function we just saw on line 22. Using the same S3
     object that we set up for our image upload function, we call a function
-    that named `listObjectsV2` on line 26. This function returns data of the
-    objects in our bucket. To display images, we need an image URL for each
+    that named `listObjects` on line 25. This function returns data of the
+    objects in our bucket. To display images, we need an image key for each
     JPEG image in our `web-images` bucket to display in our view template. The
-    content on line 28 is an array map from the data object returned by
-    `listObjectsV2` containing metadata about each object in our bucket. We
+    content on line 27 is an array map from the data object returned by
+    `listObjects` containing metadata about each object in our bucket. We
     loop the content and search for any object key ending in `.jpg`, and
-    create a parameter to pass to the S3 `getSignedUrl` function. This
-    function returns a signed URL for any object when we pass it the
-    object’s bucket name and key. In the callback function we save each URL
-    in an array, and pass it `res.render` as `imageUrls`.
+    create a parameter to pass assinged App route to the view `galleryView.ejs`.
+    In the callback function we save each URL in an array, and pass it `res.render` as `imgList`.
     
-    ![gallerycontroller_getimages](https://cloud.githubusercontent.com/assets/19173079/24823067/28139b46-1bc0-11e7-8cc2-e202b51c4603.jpg)
+    ![gallerycontroller_getimages](images/gallery_controller_retreive.png)
 
 2.  Retrieve the .jpg image URLs from IBM Cloud Object Storage
 
     The following figure shows the `galleryView` EJS template body. We get the
     `imageUrls` array from the `res.render()` method and iterate over a pair of
     nested `&lt;div&gt;&lt;/div&gt;` tags where the image URL will make a GET
-    request for the image when the `/gallery` route is requested.
+    request for the image when the `/gallery` route is requested. 
     
-    ![galleryview](https://cloud.githubusercontent.com/assets/19173079/24822878/6baf3a38-1bbe-11e7-8063-100e63480c02.jpg)
+    ![galleryview](images/gallery_view_retreive.png)
 
-    We test it locally from http://localhost:3000/gallery and see our image
-    in the following figure.
+    The following figure shows how the images are streamed to browser. The gallery route `/gallery` 
+    will access `/imgs/:myimage` route in `app.js` shown in Line 36, to get the S3 objects 
+    using function `getObject` with requested bucket name and keys as saw on Lines 38-40, and the output
+     will be streamed to browser by creating a readStream shown in Line 43.
+
+    ![galleryviewAppJs](images/gallery_view_appjs.png)
+
+    Visit <app-url>/gallery and see the images streamed and as displayed, in the following figure.
     
     ![localtest2](https://cloud.githubusercontent.com/assets/19173079/24822869/5310d658-1bbe-11e7-80fc-7a725314f7f5.jpg)
 
